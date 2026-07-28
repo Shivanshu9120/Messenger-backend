@@ -26,14 +26,33 @@ router.post('/login', async (req, res) => {
   res.json({ token, username });
 });
 
-// New endpoint to fetch all registered users
+// Fetch all registered users with details
 router.get('/users', async (req, res) => {
   try {
-    const users = await User.find({}, 'username online'); // Fetch username and online status
-    res.json(users); // Send list of users
+    const users = await User.find({}, 'username online statusMessage avatarColor');
+    res.json(users);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch users' });
   }
 });
+
+// Update user profile status
+const handleProfileUpdate = async (req, res) => {
+  const { username, statusMessage } = req.body;
+  try {
+    const updatedUser = await User.findOneAndUpdate(
+      { username },
+      { statusMessage },
+      { new: true, select: 'username online statusMessage avatarColor' }
+    );
+    res.json(updatedUser || { success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+};
+
+router.put('/profile', handleProfileUpdate);
+router.post('/profile', handleProfileUpdate);
+router.patch('/profile', handleProfileUpdate);
 
 module.exports = router;
